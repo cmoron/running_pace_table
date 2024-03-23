@@ -157,5 +157,4 @@
             </tr>
         {/each}
     </tbody>
-</t ble>
-
+</table>
