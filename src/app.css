@@ -41,7 +41,10 @@ table{
 }
 
 th {
-    background-color: #b2bec3;
+    background-color: #03A9F4;
+    color: #fff;
+    cursor: pointer;
+    padding: 3px;
 }
 
 td {
@@ -57,9 +60,16 @@ tr:nth-child(even) {
 }
 
 tr:hover {
-    background-color: #ffa;
+    background-color: #B3E5FC;
+}
+
+.highlighted {
+    background-color: #B3E5FC;
 }
 
 .col-head {
     font-weight: bold;
+}
+form {
+    margin-bottom: 10px;
 }
