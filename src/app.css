@@ -1,0 +1,65 @@
+* {
+    color: #2d3436;
+    font-family: sans-serif;
+    font-size: 9.5pt;
+}
+
+label {
+    display: inline-block;
+    width: 80px;
+    margin-bottom: 5px;
+}
+
+input, select {
+    display: inline-block;
+    width: 120px;
+    margin-bottom: 5px;
+}
+
+#distances_selection {
+    display: none;
+}
+
+#vitesse_min {
+    display: none;
+}
+
+#vitesse_max {
+    display: none;
+}
+
+#vitesse_increment {
+    display: none;
+}
+
+#table{
+    margin-top: 10px;
+}
+
+table{
+    border-collapse: collapse;
+}
+
+th {
+    background-color: #b2bec3;
+}
+
+td {
+    text-align: center;
+    margin: 0px;
+    padding-left: 5px;
+    padding-right: 5px;
+}
+
+tr:nth-child(even) {
+    background-color: #f2f2f2;
+    z-index: -2;
+}
+
+tr:hover {
+    background-color: #ffa;
+}
+
+.col-head {
+    font-weight: bold;
+}
