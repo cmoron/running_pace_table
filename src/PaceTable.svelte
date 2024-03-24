@@ -16,8 +16,8 @@
     const paceRange = [90, 120, 180, 240, 300, 360, 420, 480, 540, 600];
     const incrementRange = [1, 2, 5, 10, 15, 20, 30];
 
-    let selectedMinPace = 120; // Default min pace 2'00"/km
-    let selectedMaxPace = 360; // Default max pace 6'00"/km
+    let selectedMinPace = 360; // Default max pace 6'00"/km
+    let selectedMaxPace = 120; // Default min pace 2'00"/km
     let selectedIncrement = 1; // Default increment 1"/km
     let highlightedColumn = null;
 
