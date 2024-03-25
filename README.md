@@ -1,47 +1,63 @@
-# Svelte + Vite
+# Running Pace Table
 
-This template should help get you started developing with Svelte in Vite.
+## Overview
+The Running Pace Table is a Svelte-based web application designed to display a dynamic table of running paces. It interacts with a FastAPI backend service to retrieve and display data based on the user's input. The application allows users to select minimum and maximum paces, as well as the increment value, and displays a table of calculated paces for various running distances.
 
-## Recommended IDE Setup
+## Features
+- Interactive table to display running paces
+- User input for minimum pace, maximum pace, and increment
+- Dynamic data fetching from a FastAPI backend
+- Responsive design for desktop and mobile view
 
-[VS Code](https://code.visualstudio.com/) + [Svelte](https://marketplace.visualstudio.com/items?itemName=svelte.svelte-vscode).
+## Getting Started
+To get a local copy up and running, follow these simple steps.
 
-## Need an official Svelte framework?
+### Prerequisites
+- Ensure you have [Node.js](https://nodejs.org/) installed on your system.
 
-Check out [SvelteKit](https://github.com/sveltejs/kit#readme), which is also powered by Vite. Deploy anywhere with its serverless-first approach and adapt to various platforms, with out of the box support for TypeScript, SCSS, and Less, and easily-added support for mdsvex, GraphQL, PostCSS, Tailwind CSS, and more.
+### Installation
+1. Clone the repository:
+   ```sh
+   git clone https://github.com/cmoron/running_pace_table.git
+   ```
+2. Navigate to the project directory:
+   ```sh
+   cd running_pace_table
+   ```
+3. Install NPM packages:
+   ```sh
+   npm install
+   ```
+4. Run the application in development mode:
+   ```sh
+   npm run dev
+   ```
+   This will start the application on `localhost:3000` (or another port if 3000 is busy).
 
-## Technical considerations
+## Usage
+Use the application to calculate and view running paces. Select the desired minimum pace, maximum pace, and increment to view the table of paces for different distances.
 
-**Why use this over SvelteKit?**
+## Deployment
+For deployment, build the static files and host them on any static file server or service like Netlify, Vercel, or GitHub Pages.
 
-- It brings its own routing solution which might not be preferable for some users.
-- It is first and foremost a framework that just happens to use Vite under the hood, not a Vite app.
-
-This template contains as little as possible to get started with Vite + Svelte, while taking into account the developer experience with regards to HMR and intellisense. It demonstrates capabilities on par with the other `create-vite` templates and is a good starting point for beginners dipping their toes into a Vite + Svelte project.
-
-Should you later need the extended capabilities and extensibility provided by SvelteKit, the template has been structured similarly to SvelteKit so that it is easy to migrate.
-
-**Why `global.d.ts` instead of `compilerOptions.types` inside `jsconfig.json` or `tsconfig.json`?**
-
-Setting `compilerOptions.types` shuts out all other types not explicitly listed in the configuration. Using triple-slash references keeps the default TypeScript setting of accepting type information from the entire workspace, while also adding `svelte` and `vite/client` type information.
-
-**Why include `.vscode/extensions.json`?**
-
-Other templates indirectly recommend extensions via the README, but this file allows VS Code to prompt the user to install the recommended extension upon opening the project.
-
-**Why enable `checkJs` in the JS template?**
-
-It is likely that most cases of changing variable types in runtime are likely to be accidental, rather than deliberate. This provides advanced typechecking out of the box. Should you like to take advantage of the dynamically-typed nature of JavaScript, it is trivial to change the configuration.
-
-**Why is HMR not preserving my local component state?**
-
-HMR state preservation comes with a number of gotchas! It has been disabled by default in both `svelte-hmr` and `@sveltejs/vite-plugin-svelte` due to its often surprising behavior. You can read the details [here](https://github.com/sveltejs/svelte-hmr/tree/master/packages/svelte-hmr#preservation-of-local-state).
-
-If you have state that's important to retain within a component, consider creating an external store which would not be replaced by HMR.
-
-```js
-// store.js
-// An extremely simple external store
-import { writable } from 'svelte/store'
-export default writable(0)
+Run the build command:
+```sh
+npm run build
 ```
+This command generates static files in the `public` folder which can be deployed.
+
+## Contributing
+Contributions are what make the open-source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
+
+1. Fork the Project
+2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the Branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+## License
+Distributed under the MIT License. See `LICENSE` for more information.
+
+## Acknowledgements
+- [Svelte](https://svelte.dev/)
+- [Vite](https://vitejs.dev/)
