@@ -30,7 +30,7 @@
     async function fetchPaceData() {
         try {
             // Perform a POST request to the API
-            const response = await fetch('http://localhost:8000/generate_table', {
+          const response = await fetch(`${import.meta.env.VITE_API_URL}/generate_table`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
