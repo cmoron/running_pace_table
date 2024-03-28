@@ -20,10 +20,15 @@
     let selectedMaxPace = 120; // Default min pace 2'00"/km
     let selectedIncrement = 1; // Default increment 1"/km
     let highlightedColumn = null;
+    let highlightedRow = null;
 
     // Function to highlight a column.
     function highlightColumn(column) {
       highlightedColumn = column === highlightedColumn ? null : column;
+    }
+
+    function highlightRow(row) {
+      highlightedRow = row === highlightedRow ? null : row;
     }
 
     // Function to fetch pace data from the API
@@ -145,13 +150,13 @@
     <tbody>
         {#each paceData as row}
             <tr>
-                <td class="col-head">{formatPace(row.pace)}</td>
-                <td class="col-head">{formatSpeed(row.speed)}</td>
+                <td  on:click={() => {highlightRow(row)}} class:highlighted={highlightedRow === row} class="col-head">{formatPace(row.pace)}</td>
+                <td  on:click={() => {highlightRow(row)}} class:highlighted={highlightedRow === row} class="col-head">{formatSpeed(row.speed)}</td>
                 {#each columns as column}
                     {#if column >= 800}
-                        <td on:click={() => highlightColumn(column)} class:highlighted={highlightedColumn === column}>{formatTime(row[column], false)}</td>
+                      <td on:click={() => {highlightColumn(column); highlightRow(row)}} class:highlighted={highlightedColumn === column || highlightedRow === row}>{formatTime(row[column], false)}</td>
                     {:else}
-                        <td on:click={() => highlightColumn(column)} class:highlighted={highlightedColumn === column}>{formatTime(row[column], true)}</td>
+                      <td on:click={() => {highlightColumn(column); highlightRow(row)}} class:highlighted={highlightedColumn === column || highlightedRow === row}>{formatTime(row[column], true)}</td>
                     {/if}
                 {/each}
             </tr>
