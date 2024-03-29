@@ -4,6 +4,12 @@
     font-size: 9.5pt;
 }
 
+/* Form */
+
+form {
+    margin-bottom: 10px;
+}
+
 label {
     display: inline-block;
     width: 80px;
@@ -16,25 +22,7 @@ input, select {
     margin-bottom: 5px;
 }
 
-#distances_selection {
-    display: none;
-}
-
-#vitesse_min {
-    display: none;
-}
-
-#vitesse_max {
-    display: none;
-}
-
-#vitesse_increment {
-    display: none;
-}
-
-#table{
-    margin-top: 10px;
-}
+/* Table */
 
 table{
     border-collapse: collapse;
@@ -70,6 +58,36 @@ tr:hover {
 .col-head {
     font-weight: bold;
 }
-form {
-    margin-bottom: 10px;
+
+/* Styles pour le bouton */
+.material-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  appearance: none;
+  background-color: #03a9f4;
+  border: none;
+  padding: 0.5rem 1.5rem;
+  height: 2.2rem;
+  line-height: inherit;
+  border-radius: 2px;
+  outline: none;
+  color: #fff;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  box-sizing: border-box;
+  white-space: nowrap;
+  margin-top: 5px;
+}
+
+.material-button:hover {
+  background-color: #0288d1;
+}
+
+.material-button:focus {
+  box-shadow: 0 1px 0 0 #03a9f4;
+}
+
+.material-button:active {
+  background-color: #0277bd;
 }
