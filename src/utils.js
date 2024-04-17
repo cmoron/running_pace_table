@@ -4,7 +4,7 @@
  *
  * @param {number} seconds - The time value in seconds to be formatted.
  * @param {boolean} [withCentiseconds=false] - Determines whether to include centiseconds in the output.
- * @returns {string} A string representing the formatted time.
+ * @return {string} A string representing the formatted time.
  *                   Format: "hh'h'mm'mm'ss'ss'", with optional centiseconds as "cc" at the end.
  */
 export function formatTime(seconds, withCentiseconds) {
@@ -33,7 +33,7 @@ export function formatTime(seconds, withCentiseconds) {
  * Converts a pace value from seconds per kilometer to a minutes/kilometer format.
  *
  * @param {number} secondsPerKm - The pace value in seconds per kilometer.
- * @returns {string} A string representing the pace in minutes and seconds per kilometer.
+ * @return {string} A string representing the pace in minutes and seconds per kilometer.
  *                   Format: "mm'mm'ss'ss''".
  */
 export function formatPace(secondsPerKm) {
@@ -46,7 +46,7 @@ export function formatPace(secondsPerKm) {
  * Formats a speed value to a fixed decimal format.
  *
  * @param {number} speed - The speed value to be formatted.
- * @returns {string} A string representing the formatted speed value, rounded to two decimal places.
+ * @return {string} A string representing the formatted speed value, rounded to two decimal places.
  */
 export function formatSpeed(speed) {
   return speed.toFixed(2);

@@ -22,6 +22,7 @@ module.exports = {
   ],
   'parserOptions': {
     'ecmaVersion': 'latest',
+    'sourceType': 'module',
   },
   'rules': {
     'max-len': ['error', {'code': 120}],
