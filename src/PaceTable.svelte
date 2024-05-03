@@ -1,15 +1,16 @@
 <script>
   import {onMount} from 'svelte';
   import {formatPace, formatSpeed, formatTime} from './utils.js';
+  import {showWorldRecords, worldRecords, isLoadingRecords} from './worldRecordsStore.js';
+  import {selectedMinPace, selectedMaxPace, selectedIncrement} from './paceTableStore.js';
+  import {selectedAthletes} from './athletesStore.js';
+  import WorldRecords from './WorldRecords.svelte';
+  import AthleteSearch from './AthleteSearch.svelte';
 
   // State variables for storing pace data and table columns
   let paceData = [];
   let columns = [];
-
-  // State for toggling visibility of world records and managing their state
-  let showWorldRecords = false;
-  let worldRecords = {};
-  let isLoadingRecords = false;
+  let athletes = [];
 
   // Mapping of numeric distances to human-readable names
   const distanceDisplayNames = {
@@ -49,11 +50,6 @@
     }
   }
 
-  // Default selected pace values
-  let selectedMinPace = 360; // Default max pace 6'00"/km
-  let selectedMaxPace = 120; // Default min pace 2'00"/km
-  let selectedIncrement = 1; // Default increment 1"/km
-
   /**
    * Fetches pace data from an API endpoint and updates local state.
    */
@@ -65,9 +61,9 @@
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          min_pace: selectedMinPace,
-          max_pace: selectedMaxPace,
-          increment: selectedIncrement,
+          min_pace: $selectedMinPace,
+          max_pace: $selectedMaxPace,
+          increment: $selectedIncrement,
         }),
       });
 
@@ -86,33 +82,14 @@
   }
 
   /**
-   * Fetches world record data from an external API.
-   */
-  async function fetchWorldRecords() {
-    isLoadingRecords = true;
-    try {
-      const response = await fetch('https://running-pace-api.moron.at/get_world_records');
-      if (response.ok) {
-        worldRecords = await response.json();
-      } else {
-        console.error('Error retrieving world records');
-      }
-    } catch (error) {
-      console.error('Error:', error);
-    } finally {
-      isLoadingRecords = false;
-    }
-  }
-
-  /**
    * Checks if a given time for a distance is a men's world record.
    * @param {string} distance - The distance for which to check the record.
    * @param {number} time - The time achieved for the distance.
    * @return {boolean} - True if the time is a world record for men; otherwise, false.
    */
   function isMenWR(distance, time) {
-    if (isLoadingRecords) return false;
-    const record = worldRecords['men'][distance];
+    if ($isLoadingRecords) return false;
+    const record = $worldRecords['men'][distance];
     return isWR(distance, time, record);
   }
 
@@ -123,8 +100,8 @@
    * @return {boolean} - True if the time is a world record for women; otherwise, false.
    */
   function isWomenWR(distance, time) {
-    if (isLoadingRecords) return false;
-    const record = worldRecords['women'][distance];
+    if ($isLoadingRecords) return false;
+    const record = $worldRecords['women'][distance];
     return isWR(distance, time, record);
   }
 
@@ -137,7 +114,7 @@
    */
   function isWR(distance, time, record) {
     if (!record) return false;
-    const timeDiff = distance * selectedIncrement / 1000;
+    const timeDiff = distance * $selectedIncrement / 1000;
     const prevTime = time + timeDiff;
     const nextTime = time - timeDiff;
     return Math.abs(time - record) < Math.abs(prevTime - record) &&
@@ -145,62 +122,104 @@
   }
 
   /**
-   * Toggles the visibility of world records in the UI.
-   */
-  function toggleWorldRecords() {
-    showWorldRecords = !showWorldRecords;
-    if (showWorldRecords) {
-      fetchWorldRecords();
+    * Returns the color of the athlete record for a given cell in the table.
+    * @param {string} distance - The distance for which to check the record.
+    * @param {number} time - The time achieved for the distance.
+    * @return {string} - The color of the athlete record, or an empty string if none.
+    */
+  function getAthleteRecordColor(distance, time) {
+    const timeDiff = distance * $selectedIncrement / 1000;
+    const prevTime = time + timeDiff;
+    const nextTime = time - timeDiff;
+    for (const athlete of athletes) {
+      console.log(athlete.records, distance, time, prevTime, nextTime);
+      const record = athlete.records[distance];
+      if (Math.abs(time - record) < Math.abs(prevTime - record) &&
+        Math.abs(time - record) <= Math.abs(nextTime - record)) {
+        return 'color: #fff; background-color: ' + athlete.color;
+      }
     }
   }
 
   // Fetch initial data when component mounts
-  onMount(fetchPaceData);
+  onMount(() => {
+    const initMinPace = localStorage.getItem('selectedMinPace');
+    selectedMinPace.set(initMinPace ? parseInt(initMinPace) : $selectedMinPace);
 
-  // Reactively update paceData whenever records are not loading
-  $: if (!isLoadingRecords) {
-    paceData = paceData.map((row) => ({...row}));
+    const initMaxPace = localStorage.getItem('selectedMaxPace');
+    selectedMaxPace.set(initMaxPace ? parseInt(initMaxPace) : $selectedMaxPace);
+
+    const initIncrement = localStorage.getItem('selectedIncrement');
+    selectedIncrement.set(initIncrement ? parseInt(initIncrement) : $selectedIncrement);
+
+    const unsubscribeMinPace = selectedMinPace.subscribe((value) => {
+      localStorage.setItem('selectedMinPace', value.toString());
+    });
+
+    const unsubscribeMaxPace = selectedMaxPace.subscribe((value) => {
+      localStorage.setItem('selectedMaxPace', value.toString());
+    });
+
+    const unsubscribeIncrement = selectedIncrement.subscribe((value) => {
+      localStorage.setItem('selectedIncrement', value.toString());
+    });
+
+    fetchPaceData();
+
+    return () => {
+      unsubscribeMinPace();
+      unsubscribeMaxPace();
+      unsubscribeIncrement();
+    };
+  });
+
+  $: {
+    if ($selectedAthletes) {
+      athletes = $selectedAthletes.filter((a) => a.visible);
+    }
+    if (!$isLoadingRecords && paceData.length > 0) {
+      paceData = paceData.map((row) => ({...row}));
+    }
   }
 
 </script>
 
 <div class="top-container">
-  <div>
-    <form on:submit|preventDefault={fetchPaceData}>
-      <div>
-        <label for="min-pace">Min.</label>
-        <select id="min-pace" class="material-select" bind:value={selectedMinPace} on:change={fetchPaceData}>
-          {#each paceRange as pace}/km
-            <option value={pace}>{formatPace(pace)} / km</option>
-          {/each}
-        </select>
-      </div>
-      <div>
-        <label for="max-pace">Max.</label>
-        <select id="max-pace" class="material-select" bind:value={selectedMaxPace} on:change={fetchPaceData}>
-          {#each paceRange as pace}
-            <option value={pace}>{formatPace(pace)} / km</option>
-          {/each}
-        </select>
-      </div>
-      <div>
-        <label for="increment">Incrément.</label>
-        <select id="increment" class="material-select" bind:value={selectedIncrement} on:change={fetchPaceData}>
-          {#each incrementRange as increment}
-            <option value={increment}>{increment}"</option>
-          {/each}
-        </select>
-      </div>
-    </form>
-    <label class="switch-label" for="wr-switch">World Records</label>
-    <label class="switch">
-      <input id="wr-switch" type="checkbox" on:click={toggleWorldRecords}>
-      <span class="slider round"></span>
-    </label>
-    {#if isLoadingRecords}
-      <div class="spinner"></div>
-    {/if}
-  </div>
+
+  <!-- Athlete search component -->
+  <AthleteSearch />
+
+  <!-- World records component -->
+  <WorldRecords />
+
+  <!-- Form to select pace range and increment -->
+  <form on:submit|preventDefault={fetchPaceData}>
+    <div>
+      <label for="min-pace">Min.</label>
+      <select id="min-pace" class="material-select" bind:value={$selectedMinPace} on:change={fetchPaceData}>
+        {#each paceRange as pace}/km
+          <option value={pace}>{formatPace(pace)} / km</option>
+        {/each}
+      </select>
+    </div>
+    <div>
+      <label for="max-pace">Max.</label>
+      <select id="max-pace" class="material-select" bind:value={$selectedMaxPace} on:change={fetchPaceData}>
+        {#each paceRange as pace}
+          <option value={pace}>{formatPace(pace)} / km</option>
+        {/each}
+      </select>
+    </div>
+    <div>
+      <label for="increment">Incrément.</label>
+      <select id="increment" class="material-select" bind:value={$selectedIncrement} on:change={fetchPaceData}>
+        {#each incrementRange as increment}
+          <option value={increment}>{increment}"</option>
+        {/each}
+      </select>
+    </div>
+  </form>
+
 </div>
 
 <!-- Table markup to display pace data -->
@@ -224,8 +243,9 @@
         {#each columns as column, columnIndex}
           <td on:click={(event) => handleHighlight(event, column, row)}
               class:highlighted={highlighted.column === column || highlighted.row === row}
-              class:men-record={showWorldRecords && isMenWR(column, row[column])}
-              class:women-record={showWorldRecords && isWomenWR(column, row[column])}>
+              class:men-record={$showWorldRecords && isMenWR(column, row[column])}
+              class:women-record={$showWorldRecords && isWomenWR(column, row[column])}
+              style="{getAthleteRecordColor(column, row[column])}">
               {formatTime(row[column], column < 800)}
           </td>
         {/each}
@@ -235,7 +255,6 @@
 </table>
 
 <style>
-
   form {
     margin-bottom: 10px;
   }
@@ -287,122 +306,21 @@
     font-weight: bold;
   }
 
+  td {
+    text-align: center;
+    margin: 0px;
+    padding-left: 5px;
+    padding-right: 5px;
+    box-sizing: border-box;
+  }
+
   .men-record {
-    background-color: #1565C0;
-    color: #fff;
+    background-color: gold;
+    color: #1565C0;
   }
 
   .women-record {
-    background-color: #EC407A;
-    color: #fff;
-  }
-
-  .switch-label {
-    vertical-align: middle;
-  }
-  .switch {
-    position: relative;
-    display: inline-block;
-    width: 40px;
-    height: 24px;
-    vertical-align: middle;
-  }
-
-  .switch input {
-    opacity: 0;
-    width: 0;
-    height: 0;
-  }
-
-  .slider {
-    position: absolute;
-    cursor: pointer;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: #ccc;
-    -webkit-transition: .4s;
-    transition: .4s;
-  }
-
-  .slider:before {
-    position: absolute;
-    content: "";
-    height: 16px;
-    width: 16px;
-    left: 4px;
-    bottom: 4px;
-    background-color: white;
-    -webkit-transition: .4s;
-    transition: .4s;
-  }
-
-  input:checked + .slider {
-    background-color: #2196F3;
-  }
-
-  input:focus + .slider {
-    box-shadow: 0 0 1px #2196F3;
-  }
-
-  input:checked + .slider:before {
-    -webkit-transform: translateX(16px);
-    -ms-transform: translateX(16px);
-    transform: translateX(16px);
-  }
-
-  .slider.round {
-    border-radius: 34px;
-  }
-
-  .slider.round:before {
-    border-radius: 50%;
-  }
-
-  .spinner {
-    height: 12px;
-    width: 12px;
-    display: inline-block;
-    vertical-align: -3px;
-    margin-left: 10px;
-    -webkit-animation: rotation 1s infinite linear;
-    -moz-animation: rotation 1s infinite linear;
-    -o-animation: rotation 1s infinite linear;
-    animation: rotation 1s infinite linear;
-    border:3px solid rgba(0,0,0,.2);
-    border-radius:100%;
-  }
-
-  .spinner:before {
-    content:"";
-    display:block;
-    position:absolute;
-    left:-3px;
-    top:-3px;
-    height:100%;
-    width:100%;
-    border-top:3px solid rgba(0,0,0,.8);
-    border-left:3px solid transparent;
-    border-bottom:3px solid transparent;
-    border-right:3px solid transparent;
-    border-radius:100%;
-  }
-
-  @-webkit-keyframes rotation {
-    from {-webkit-transform: rotate(0deg);}
-    to {-webkit-transform: rotate(359deg);}
-  }
-  @-moz-keyframes rotation {
-    from {-moz-transform: rotate(0deg);}
-    to {-moz-transform: rotate(359deg);}
-  }
-  @-o-keyframes rotation {
-    from {-o-transform: rotate(0deg);}
-    to {-o-transform: rotate(359deg);}
-  }
-  @keyframes rotation {
-    from {transform: rotate(0deg);}
-    to {transform: rotate(359deg);}
+    background-color: gold;
+    color: #EC407A;
   }
 </style>
