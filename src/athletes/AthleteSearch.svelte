@@ -8,6 +8,7 @@
   const isLoading = {};
   let inputElement;
   let searchQuery = '';
+  let controller;
 
   /**
    * Fetches athlete records from the API and logs the data to the console.
@@ -67,8 +68,19 @@
       athleteSuggestions.set([]);
       return;
     }
+
+    if (controller) {
+      controller.abort();
+    }
+
+    controller = new AbortController();
+    const signal = controller.signal;
+
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/get_athletes?name=${encodeURIComponent(query)}`);
+      const response = await fetch(
+          `${import.meta.env.VITE_API_URL}/get_athletes?name=${encodeURIComponent(query)}`,
+          {signal},
+      );
       if (response.ok) {
         const data = await response.json();
         athleteSuggestions.set(data);
