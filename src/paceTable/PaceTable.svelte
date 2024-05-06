@@ -1,16 +1,21 @@
 <script>
   import {onMount} from 'svelte';
-  import {formatPace, formatSpeed, formatTime} from './utils.js';
-  import {showWorldRecords, worldRecords, isLoadingRecords} from './worldRecordsStore.js';
+  import {formatPace, formatSpeed, formatTime} from '../utils/timeUtils.js';
+  import {setupStore} from '../utils/storeUtils.js';
+  import {DEFAULT_MIN_PACE, DEFAULT_MAX_PACE} from '../utils/constants.js';
   import {selectedMinPace, selectedMaxPace, selectedIncrement} from './paceTableStore.js';
-  import {selectedAthletes} from './athletesStore.js';
-  import WorldRecords from './WorldRecords.svelte';
-  import AthleteSearch from './AthleteSearch.svelte';
+  import {showWorldRecords, worldRecords, isLoadingRecords} from '../worldRecords/worldRecordsStore.js';
+  import {selectedAthletes} from '../athletes/athletesStore.js';
+  import WorldRecords from '../worldRecords/WorldRecords.svelte';
+  import AthleteSearch from '../athletes/AthleteSearch.svelte';
 
   // State variables for storing pace data and table columns
   let paceData = [];
   let columns = [];
   let athletes = [];
+  let errorMessage = '';
+  let prevSelectedMinPace = DEFAULT_MIN_PACE;
+  let prevSelectedMaxPace = DEFAULT_MAX_PACE;
 
   // Mapping of numeric distances to human-readable names
   const distanceDisplayNames = {
@@ -132,7 +137,6 @@
     const prevTime = time + timeDiff;
     const nextTime = time - timeDiff;
     for (const athlete of athletes) {
-      console.log(athlete.records, distance, time, prevTime, nextTime);
       const record = athlete.records[distance];
       if (Math.abs(time - record) < Math.abs(prevTime - record) &&
         Math.abs(time - record) <= Math.abs(nextTime - record)) {
@@ -143,28 +147,9 @@
 
   // Fetch initial data when component mounts
   onMount(() => {
-    const initMinPace = localStorage.getItem('selectedMinPace');
-    selectedMinPace.set(initMinPace ? parseInt(initMinPace) : $selectedMinPace);
-
-    const initMaxPace = localStorage.getItem('selectedMaxPace');
-    selectedMaxPace.set(initMaxPace ? parseInt(initMaxPace) : $selectedMaxPace);
-
-    const initIncrement = localStorage.getItem('selectedIncrement');
-    selectedIncrement.set(initIncrement ? parseInt(initIncrement) : $selectedIncrement);
-
-    const unsubscribeMinPace = selectedMinPace.subscribe((value) => {
-      localStorage.setItem('selectedMinPace', value.toString());
-    });
-
-    const unsubscribeMaxPace = selectedMaxPace.subscribe((value) => {
-      localStorage.setItem('selectedMaxPace', value.toString());
-    });
-
-    const unsubscribeIncrement = selectedIncrement.subscribe((value) => {
-      localStorage.setItem('selectedIncrement', value.toString());
-    });
-
-    fetchPaceData();
+    const unsubscribeMinPace = setupStore(selectedMinPace, 'selectedMinPace', DEFAULT_MIN_PACE);
+    const unsubscribeMaxPace = setupStore(selectedMaxPace, 'selectedMaxPace', DEFAULT_MAX_PACE);
+    const unsubscribeIncrement = setupStore(selectedIncrement, 'selectedIncrement', DEFAULT_INCREMENT);
 
     return () => {
       unsubscribeMinPace();
@@ -173,12 +158,24 @@
     };
   });
 
-  $: {
-    if ($selectedAthletes) {
-      athletes = $selectedAthletes.filter((a) => a.visible);
-    }
-    if (!$isLoadingRecords && paceData.length > 0) {
-      paceData = paceData.map((row) => ({...row}));
+  $: if ($selectedAthletes) {
+    athletes = $selectedAthletes.filter((a) => a.visible);
+  }
+
+  $: if (!$isLoadingRecords && paceData.length > 0) {
+    paceData = paceData.map((row) => ({...row}));
+  }
+
+  $: if ($selectedMinPace && $selectedMaxPace && $selectedIncrement) {
+    if ($selectedMinPace < $selectedMaxPace) {
+      errorMessage = 'L\'allure minimale ne peut pas être supérieure à l\'allure maximale.';
+      $selectedMinPace = prevSelectedMinPace;
+      $selectedMaxPace = prevSelectedMaxPace;
+    } else {
+      errorMessage = '';
+      prevSelectedMinPace = $selectedMinPace;
+      prevSelectedMaxPace = $selectedMaxPace;
+      fetchPaceData();
     }
   }
 
@@ -193,10 +190,10 @@
   <WorldRecords />
 
   <!-- Form to select pace range and increment -->
-  <form on:submit|preventDefault={fetchPaceData}>
+  <form>
     <div>
       <label for="min-pace">Min.</label>
-      <select id="min-pace" class="material-select" bind:value={$selectedMinPace} on:change={fetchPaceData}>
+      <select id="min-pace" class="material-select" bind:value={$selectedMinPace}>
         {#each paceRange as pace}/km
           <option value={pace}>{formatPace(pace)} / km</option>
         {/each}
@@ -204,7 +201,7 @@
     </div>
     <div>
       <label for="max-pace">Max.</label>
-      <select id="max-pace" class="material-select" bind:value={$selectedMaxPace} on:change={fetchPaceData}>
+      <select id="max-pace" class="material-select" bind:value={$selectedMaxPace}>
         {#each paceRange as pace}
           <option value={pace}>{formatPace(pace)} / km</option>
         {/each}
@@ -212,13 +209,17 @@
     </div>
     <div>
       <label for="increment">Incrément.</label>
-      <select id="increment" class="material-select" bind:value={$selectedIncrement} on:change={fetchPaceData}>
+      <select id="increment" class="material-select" bind:value={$selectedIncrement}>
         {#each incrementRange as increment}
           <option value={increment}>{increment}"</option>
         {/each}
       </select>
     </div>
   </form>
+
+  {#if errorMessage}
+    <p class="error">{errorMessage}</p>
+  {/if}
 
 </div>
 
@@ -322,5 +323,9 @@
   .women-record {
     background-color: gold;
     color: #EC407A;
+  }
+
+  .error {
+    color: red;
   }
 </style>

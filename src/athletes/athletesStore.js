@@ -28,7 +28,6 @@ const colorUsage = storedColorUsage || new Array(colorPool.length).fill(false);
  */
 function getNextColor() {
   let index = colorUsage.indexOf(false);
-  console.log(colorUsage, index);
   if (index === -1) {
     // reset all colors as unused
     colorUsage.fill(false);
@@ -45,8 +44,6 @@ function getNextColor() {
  */
 function releaseColor(color) {
   const index = colorPool.indexOf(color);
-  console.log('Releasing color:', color, index);
-  console.log(colorUsage, index);
   if (index !== -1) {
     colorUsage[index] = false;
     localStorage.setItem('colorUsage', JSON.stringify(colorUsage));

@@ -63,7 +63,7 @@
    * @param {string} query - The search text input by the user to find athletes.
    */
   const fetchAthletes = debounce(async (query) => {
-    if (query.length < 2) {
+    if (query.length < 3) {
       athleteSuggestions.set([]);
       return;
     }
