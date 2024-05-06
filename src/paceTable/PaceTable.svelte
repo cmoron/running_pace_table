@@ -160,6 +160,7 @@
 
   $: if ($selectedAthletes) {
     athletes = $selectedAthletes.filter((a) => a.visible);
+    fetchPaceData();
   }
 
   $: if (!$isLoadingRecords && paceData.length > 0) {
