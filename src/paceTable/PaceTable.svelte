@@ -2,7 +2,7 @@
   import {onMount} from 'svelte';
   import {formatPace, formatSpeed, formatTime} from '../utils/timeUtils.js';
   import {setupStore} from '../utils/storeUtils.js';
-  import {DEFAULT_MIN_PACE, DEFAULT_MAX_PACE} from '../utils/constants.js';
+  import {DEFAULT_INCREMENT, DEFAULT_MIN_PACE, DEFAULT_MAX_PACE} from '../utils/constants.js';
   import {selectedMinPace, selectedMaxPace, selectedIncrement} from './paceTableStore.js';
   import {showWorldRecords, worldRecords, isLoadingRecords} from '../worldRecords/worldRecordsStore.js';
   import {selectedAthletes} from '../athletes/athletesStore.js';
@@ -119,7 +119,7 @@
    */
   function isWR(distance, time, record) {
     if (!record) return false;
-    const timeDiff = distance * $selectedIncrement / 1000;
+    const timeDiff = Number(distance) * Number($selectedIncrement) / 1000;
     const prevTime = time + timeDiff;
     const nextTime = time - timeDiff;
     return Math.abs(time - record) < Math.abs(prevTime - record) &&
@@ -133,7 +133,7 @@
     * @return {string} - The color of the athlete record, or an empty string if none.
     */
   function getAthleteRecordColor(distance, time) {
-    const timeDiff = distance * $selectedIncrement / 1000;
+    const timeDiff = Number(distance) * Number($selectedIncrement) / 1000;
     const prevTime = time + timeDiff;
     const nextTime = time - timeDiff;
     for (const athlete of athletes) {
