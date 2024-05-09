@@ -6,6 +6,8 @@
 
   const athleteSuggestions = writable([]);
   const isLoading = {};
+  let activeSearchCount = 0;
+  let isSearching = false;
   let inputElement;
   let searchQuery = '';
   let controller;
@@ -76,6 +78,9 @@
     controller = new AbortController();
     const signal = controller.signal;
 
+    isSearching = true;
+    activeSearchCount++;
+
     try {
       const response = await fetch(
           `${import.meta.env.VITE_API_URL}/get_athletes?name=${encodeURIComponent(query)}`,
@@ -89,8 +94,18 @@
         athleteSuggestions.set([]);
       }
     } catch (error) {
-      console.error('Error fetching athlete data:', error);
-      athleteSuggestions.set([]);
+      if (error.name === 'AbortError') {
+        // Ignore abort errors as they are intentional
+        console.debug('Fetch aborted:', query);
+      } else {
+        console.error('Error fetching athlete data:', error);
+        athleteSuggestions.set([]);
+      }
+    } finally {
+      activeSearchCount--;
+      if (activeSearchCount === 0) {
+        isSearching = false;
+      }
     }
   }, 200); // Delay in milliseconds
 
@@ -128,6 +143,13 @@
     }
   }
 
+  /**
+   * Closes the suggestions list when the user presses the escape key.
+   */
+  function closeSuggestions() {
+    athleteSuggestions.set([]);
+  }
+
   onMount(() => {
     const storedAthletes = localStorage.getItem('selectedAthletes');
     if (storedAthletes) {
@@ -138,23 +160,32 @@
       localStorage.setItem('selectedAthletes', JSON.stringify($selectedAthletes));
     });
 
+    /*
     window.addEventListener('click', handleClickOutside);
     return () => {
       window.removeEventListener('click', handleClickOutside);
     };
+    */
   });
 
 </script>
 
 <div class="athlete-search">
 
-  <input type="text" bind:value={searchQuery}
+  <input type="text"
+         bind:value={searchQuery}
          bind:this={inputElement}
          on:input="{() => fetchAthletes(searchQuery)}"
          placeholder="Rechercher un athlète..."
          class="search-input" />
+
+  {#if isSearching}
+    <div class="spinner"></div>
+  {/if}
+
   {#if $athleteSuggestions.length}
     <ul class="suggestions">
+      <button on:click={closeSuggestions} class="close-btn">✖</button>
       {#each $athleteSuggestions as athlete}
         <li>
           <button on:click={() => selectAthlete(athlete)} class="suggestion-btn">
@@ -213,6 +244,17 @@
     border-radius: 4px;
     position: absolute;
     z-index: 1;
+  }
+
+  .close-btn {
+    color: #f00;
+    position: absolute;
+    top: 0;
+    right: 0;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 20px;
   }
 
   .suggestion-btn {
