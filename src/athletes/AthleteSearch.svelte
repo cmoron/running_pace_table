@@ -144,10 +144,12 @@
   }
 
   /**
-   * Closes the suggestions list when the user presses the escape key.
+   * Handles the focus event on the search input to trigger a search if the query length is 3 or more characters.
    */
-  function closeSuggestions() {
-    athleteSuggestions.set([]);
+  function handleFocus() {
+    if (searchQuery.length >= 3) {
+      fetchAthletes(searchQuery);
+    }
   }
 
   onMount(() => {
@@ -160,12 +162,10 @@
       localStorage.setItem('selectedAthletes', JSON.stringify($selectedAthletes));
     });
 
-    /*
     window.addEventListener('click', handleClickOutside);
     return () => {
       window.removeEventListener('click', handleClickOutside);
     };
-    */
   });
 
 </script>
@@ -175,6 +175,7 @@
   <input type="text"
          bind:value={searchQuery}
          bind:this={inputElement}
+         on:focus={handleFocus}
          on:input="{() => fetchAthletes(searchQuery)}"
          placeholder="Rechercher un athlète..."
          class="search-input" />
@@ -185,7 +186,6 @@
 
   {#if $athleteSuggestions.length}
     <ul class="suggestions">
-      <button on:click={closeSuggestions} class="close-btn">✖</button>
       {#each $athleteSuggestions as athlete}
         <li>
           <button on:click={() => selectAthlete(athlete)} class="suggestion-btn">
@@ -244,17 +244,6 @@
     border-radius: 4px;
     position: absolute;
     z-index: 1;
-  }
-
-  .close-btn {
-    color: #f00;
-    position: absolute;
-    top: 0;
-    right: 0;
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-size: 20px;
   }
 
   .suggestion-btn {
