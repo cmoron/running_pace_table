@@ -3,6 +3,8 @@
   import {writable} from 'svelte/store';
   import {debounce} from 'lodash-es';
   import {selectedAthletes} from './athletesStore.js';
+  import {flagIso3ToIso2} from '../utils/flagsUtils.js';
+  import '/node_modules/flag-icons/css/flag-icons.min.css';
 
   const athleteSuggestions = writable([]);
   const isLoading = {};
@@ -83,7 +85,7 @@
 
     try {
       const response = await fetch(
-          `${import.meta.env.VITE_API_URL}/get_athletes?name=${encodeURIComponent(query)}`,
+          `${import.meta.env.VITE_API_URL}/get_athletes_from_db?name=${encodeURIComponent(query)}`,
           {signal},
       );
       if (response.ok) {
@@ -172,24 +174,33 @@
 
 <div class="athlete-search">
 
-  <input type="text"
-         bind:value={searchQuery}
-         bind:this={inputElement}
-         on:focus={handleFocus}
-         on:input="{() => fetchAthletes(searchQuery)}"
-         placeholder="Rechercher un athlète..."
-         class="search-input" />
+  <div class="search-box">
+    <input type="text"
+           class="search-input"
+           bind:value={searchQuery}
+           on:focus={handleFocus}
+           on:input="{() => fetchAthletes(searchQuery)}"
+           placeholder="Rechercher un athlète..."
+           bind:this={inputElement} />
+    <i class="fas fa-search search-icon"></i>
+  </div>
 
-  {#if isSearching}
-    <div class="spinner"></div>
-  {/if}
-
-  {#if $athleteSuggestions.length}
+  {#if $athleteSuggestions.length || isSearching}
     <ul class="suggestions">
+      {#if isSearching}
+        <div class="search-spinner"></div>
+      {/if}
       {#each $athleteSuggestions as athlete}
         <li>
           <button on:click={() => selectAthlete(athlete)} class="suggestion-btn">
-            {athlete.name} {athlete.birth_date || ''}
+            <span class="fi fi-{flagIso3ToIso2(athlete.nationality).toLowerCase()}"></span>
+            {athlete.name} - {athlete.birth_date || ''}
+            {#if athlete.sexe}
+              <i class={`fa ${athlete.sexe === 'M' ? 'fa-mars' : 'fa-venus'}`}></i>
+            {/if}
+            {#if athlete.license_id}
+              <i class="license">{athlete.license_id}</i>
+            {/if}
           </button>
         </li>
       {/each}
@@ -200,12 +211,12 @@
     <div class="selected-athlete">
       <label class="switch">
         <input
-        id="athlete-switch-{athlete.id}"
-        type="checkbox"
-        checked={athlete.visible}
-        on:change={() => toggleAthleteRecords(athlete)}
-        >
-        <span class="slider round"></span>
+          id="athlete-switch-{athlete.id}"
+          type="checkbox"
+          checked={athlete.visible}
+          on:change={() => toggleAthleteRecords(athlete)}
+          >
+          <span class="slider round"></span>
       </label>
       <button on:click={() => deleteAthlete(athlete)} class="delete-athlete-btn">x</button>
       <span class="color-indicator" style="background-color: {athlete.color};"></span>
@@ -227,11 +238,45 @@
     position: relative;
   }
 
+  .search-box {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+
   .search-input {
     margin-top: 10px;
     margin-bottom: 10px;
     padding: 10px;
+    padding-left: 30px;
     width: 50%;
+  }
+
+  .search-icon {
+    position: absolute;
+    left: 10px;
+    color: #aaa;
+    transition: color 0.3s;
+  }
+  .search-input:focus + .search-icon {
+    color: #666;
+  }
+
+  .suggestions .fi {
+    margin-right: 5px;
+    vertical-align: top;
+  }
+
+  .suggestions .fa-mars {
+    color: #1565C0;
+  }
+
+  .suggestions .fa-venus {
+    color: #EC407A;
+  }
+
+  .suggestions .license {
+    color: #aaa;
   }
 
   .suggestions {
@@ -279,6 +324,38 @@
     display: inline-block;
     margin-right: 5px;
     vertical-align: middle;
+  }
+
+  .search-spinner {
+    position: absolute;
+    left: 50%; /* Centrer horizontalement */
+    transform: translate(-50%, -50%); 
+    height: 12px;
+    width: 12px;
+    display: inline-block;
+    vertical-align: -3px;
+    margin-left: 10px;
+    -webkit-animation: rotation 1s infinite linear;
+    -moz-animation: rotation 1s infinite linear;
+    -o-animation: rotation 1s infinite linear;
+    animation: rotation 1s infinite linear;
+    border:3px solid rgba(0,0,0,.2);
+    border-radius:100%;
+  }
+
+  .search-spinner:before {
+    content:"";
+    display:block;
+    position:absolute;
+    left:-3px;
+    top:-3px;
+    height:100%;
+    width:100%;
+    border-top:3px solid rgba(0,0,0,.8);
+    border-left:3px solid transparent;
+    border-bottom:3px solid transparent;
+    border-right:3px solid transparent;
+    border-radius:100%;
   }
 
 </style>
