@@ -188,7 +188,7 @@
   {#if $athleteSuggestions.length || isSearching}
     <ul class="suggestions">
       {#if isSearching}
-        <div class="search-spinner"></div>
+        <div class="progress-bar"></div>
       {/if}
       {#each $athleteSuggestions as athlete}
         <li>
@@ -280,15 +280,39 @@
   }
 
   .suggestions {
+    position: relative;
     list-style: none;
     margin-top: 4px;
     padding: 10px;
     background: white;
     width: 50%;
+    min-height: 32px;
     border: 1px solid #ccc;
     border-radius: 4px;
     position: absolute;
     z-index: 1;
+  }
+
+  .progress-bar {
+    position: absolute;
+    height: 3px;
+    background-color: #03A9F4;
+    width: 0%;
+    top: 0;
+    left: 0;
+    animation: loadProgress 2s infinite;
+  }
+
+  @keyframes loadProgress {
+    0% {
+      width: 0%;
+    }
+    50% {
+      width: 100%;
+    }
+    100% {
+      width: 0%;
+    }
   }
 
   .suggestion-btn {
@@ -324,38 +348,6 @@
     display: inline-block;
     margin-right: 5px;
     vertical-align: middle;
-  }
-
-  .search-spinner {
-    position: absolute;
-    left: 50%; /* Centrer horizontalement */
-    transform: translate(-50%, -50%); 
-    height: 12px;
-    width: 12px;
-    display: inline-block;
-    vertical-align: -3px;
-    margin-left: 10px;
-    -webkit-animation: rotation 1s infinite linear;
-    -moz-animation: rotation 1s infinite linear;
-    -o-animation: rotation 1s infinite linear;
-    animation: rotation 1s infinite linear;
-    border:3px solid rgba(0,0,0,.2);
-    border-radius:100%;
-  }
-
-  .search-spinner:before {
-    content:"";
-    display:block;
-    position:absolute;
-    left:-3px;
-    top:-3px;
-    height:100%;
-    width:100%;
-    border-top:3px solid rgba(0,0,0,.8);
-    border-left:3px solid transparent;
-    border-bottom:3px solid transparent;
-    border-right:3px solid transparent;
-    border-radius:100%;
   }
 
 </style>
