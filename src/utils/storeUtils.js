@@ -8,7 +8,19 @@
  */
 export function initStoreFromLocalStorage(store, key, defaultValue) {
   const storedValue = localStorage.getItem(key);
-  store.set(storedValue ? parseInt(storedValue) : defaultValue);
+  let parsedValue;
+  if (storedValue !== null) {
+    if (typeof defaultValue === 'boolean') {
+      parsedValue = storedValue === 'true';
+    } else if (typeof defaultValue === 'number') {
+      parsedValue = parseInt(storedValue);
+    }
+  } else {
+    parsedValue = defaultValue;
+  }
+
+  store.set(parsedValue);
+
   return store.subscribe((value) => {
     localStorage.setItem(key, value.toString());
   });

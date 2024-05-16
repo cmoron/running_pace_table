@@ -1,5 +1,7 @@
 <script>
+  import {onMount} from 'svelte';
   import {showWorldRecords, worldRecords, isLoadingRecords} from './worldRecordsStore.js';
+  import {setupStore} from '../utils/storeUtils.js';
 
   /**
    * Fetches the world records from the API and updates the worldRecords store.
@@ -20,20 +22,23 @@
     }
   }
 
-  /**
-   * Toggles the visibility of world records in the UI.
-   */
-  function toggleWorldRecords() {
-    showWorldRecords.update((value) => !value);
-    if ($showWorldRecords) {
-      fetchWorldRecords();
-    }
+  $: if ($showWorldRecords) {
+    fetchWorldRecords();
   }
+
+  onMount(() => {
+    const unsubscribeShowWorldRecords = setupStore(showWorldRecords, 'showWorldRecords', false);
+
+    return () => {
+      unsubscribeShowWorldRecords();
+    };
+  });
+
 </script>
 
 <div class="world-records">
   <label class="switch">
-    <input id="wr-switch" type="checkbox" on:click={toggleWorldRecords}>
+    <input id="wr-switch" type="checkbox" bind:checked={$showWorldRecords}>
     <span class="slider round"></span>
   </label>
   <label class="switch-label" for="wr-switch">WORLD RECORDS</label>
@@ -54,7 +59,7 @@
     margin-left: 2.1rem;
   }
 
- .record-indicator {
+  .record-indicator {
     width: 20px;
     height: 20px;
     display: inline-block;

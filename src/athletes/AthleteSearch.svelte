@@ -8,6 +8,7 @@
 
   const athleteSuggestions = writable([]);
   const isLoading = {};
+  const databaseStatus = writable({numAthletes: 0, lastUpdate: ''});
   let activeSearchCount = 0;
   let isSearching = false;
   let inputElement;
@@ -33,6 +34,29 @@
     } finally {
       // set isLoading a false pour cet athlete
       isLoading[athlete.id] = false;
+    }
+  }
+
+  /**
+   * Fetches the database status from the API and updates the local state.
+   */
+  async function fetchDatabaseStatus() {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/database_status`);
+      if (response.ok) {
+        const data = await response.json();
+        if (data.last_update) {
+          data.last_update = new Date(data.last_update).toLocaleString();
+        }
+        if (data.num_athletes) {
+          data.num_athletes = new Intl.NumberFormat().format(data.num_athletes);
+        }
+        databaseStatus.set(data);
+      } else {
+        console.error('Failed to fetch database status');
+      }
+    } catch (error) {
+      console.error('Error fetching database status:', error);
     }
   }
 
@@ -155,6 +179,8 @@
   }
 
   onMount(() => {
+    fetchDatabaseStatus();
+
     const storedAthletes = localStorage.getItem('selectedAthletes');
     if (storedAthletes) {
       selectedAthletes.setAthletes(JSON.parse(storedAthletes));
@@ -184,6 +210,12 @@
            bind:this={inputElement} />
     <i class="fas fa-search search-icon"></i>
   </div>
+  {#if $databaseStatus.num_athletes}
+    <div class="database-status">
+      {$databaseStatus.num_athletes} athlètes de <a href="https://www.bases_athle.fr">bases.athle.fr</a>,
+      dernière mise à jour {$databaseStatus.last_update}
+    </div>
+  {/if}
 
   {#if $athleteSuggestions.length || isSearching}
     <ul class="suggestions">
@@ -223,6 +255,12 @@
       <a href={athlete.url} target="_blank" rel="noopener noreferrer">
         {athlete.name}
       </a>
+      <span>
+      {#if athlete.sexe}
+        <i class={`fa ${athlete.sexe === 'M' ? 'fa-mars' : 'fa-venus'}`}></i>
+      {/if}
+      <i class="fas fa-external-link-alt"></i>
+      </span>
       {#if isLoadingRecords(athlete.id)}
         <div class="spinner"></div>
       {/if}
@@ -267,11 +305,11 @@
     vertical-align: top;
   }
 
-  .suggestions .fa-mars {
+  .fa-mars {
     color: #1565C0;
   }
 
-  .suggestions .fa-venus {
+  .fa-venus {
     color: #EC407A;
   }
 
@@ -348,6 +386,17 @@
     display: inline-block;
     margin-right: 5px;
     vertical-align: middle;
+  }
+
+  .database-status {
+    font-size: 11px;
+    color: #888;
+    margin-bottom: 10px;
+    font-style: italic;
+  }
+
+  .database-status a {
+    font-size: 11px;
   }
 
 </style>
