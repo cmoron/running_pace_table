@@ -256,6 +256,10 @@
   </tbody>
 </table>
 
+<div class="contact">
+  <a href="mailto:contact@mypacer.fr">contact@mypacer.fr</a>
+</div>
+
 <style>
   form {
     margin-bottom: 10px;
@@ -328,5 +332,9 @@
 
   .error {
     color: red;
+  }
+
+  .contact {
+    margin-top: 1rem;
   }
 </style>
