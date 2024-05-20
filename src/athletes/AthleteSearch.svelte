@@ -212,8 +212,10 @@
   </div>
   {#if $databaseStatus.num_athletes}
     <div class="database-status">
-      {$databaseStatus.num_athletes} athlètes de <a href="https://www.bases_athle.fr">bases.athle.fr</a>,
-      dernière mise à jour {$databaseStatus.last_update}
+      {$databaseStatus.num_athletes} athlètes de <a href="https://www.bases_athle.fr">bases.athle.fr</a>
+      {#if $databaseStatus.last_update}
+        , derniers ajouts d'athlètes {$databaseStatus.last_update}
+      {/if}
     </div>
   {/if}
 
