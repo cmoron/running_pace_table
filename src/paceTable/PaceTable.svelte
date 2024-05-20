@@ -136,12 +136,24 @@
     const timeDiff = Number(distance) * Number($selectedIncrement) / 1000;
     const prevTime = time + timeDiff;
     const nextTime = time - timeDiff;
+    const athleteColors = [];
+
     for (const athlete of athletes) {
       const record = athlete.records[distance];
       if (Math.abs(time - record) < Math.abs(prevTime - record) &&
         Math.abs(time - record) <= Math.abs(nextTime - record)) {
-        return 'color: #fff; background-color: ' + athlete.color;
+        athleteColors.push(athlete.color);
       }
+    }
+
+    if (athleteColors.length > 1) {
+      const gradient = athleteColors.map((color, index) =>
+        `${color} ${index * 100 / athleteColors.length}%, ${color} ${(index + 1) * 100 / athleteColors.length}%`).join(', ');
+      return `background: linear-gradient(to right, ${gradient}); color: #fff;`;
+    } else if (athleteColors.length === 1) {
+      return `background-color: ${athleteColors[0]}; color: #fff;`;
+    } else {
+      return '';
     }
   }
 
