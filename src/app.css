@@ -7,7 +7,7 @@
 .switch {
     position: relative;
     display: inline-block;
-    width: 40px;
+    width: 40px !important;
     height: 24px;
     vertical-align: middle;
 }
@@ -16,6 +16,10 @@
     opacity: 0;
     width: 0;
     height: 0;
+}
+
+.switch-label {
+    margin-left: 2.1rem;
 }
 
 .slider {

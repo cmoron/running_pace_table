@@ -2,12 +2,13 @@
   import {onMount} from 'svelte';
   import {formatPace, formatSpeed, formatTime} from '../utils/timeUtils.js';
   import {setupStore} from '../utils/storeUtils.js';
-  import {DEFAULT_INCREMENT, DEFAULT_MIN_PACE, DEFAULT_MAX_PACE} from '../utils/constants.js';
+  import {DEFAULT_INCREMENT, DEFAULT_MIN_PACE, DEFAULT_MAX_PACE, DEFAULT_VMA} from '../utils/constants.js';
   import {selectedMinPace, selectedMaxPace, selectedIncrement} from './paceTableStore.js';
   import {showWorldRecords, worldRecords, isLoadingRecords} from '../worldRecords/worldRecordsStore.js';
   import {selectedAthletes} from '../athletes/athletesStore.js';
   import WorldRecords from '../worldRecords/WorldRecords.svelte';
   import AthleteSearch from '../athletes/AthleteSearch.svelte';
+  import {showVMA, selectedVMA} from './vmaStore.js';
 
   // State variables for storing pace data and table columns
   let paceData = [];
@@ -16,6 +17,7 @@
   let errorMessage = '';
   let prevSelectedMinPace = DEFAULT_MIN_PACE;
   let prevSelectedMaxPace = DEFAULT_MAX_PACE;
+  const vmaRange = Array.from({length: 41}, (_, i) => 10 + i * 0.5);
 
   // Mapping of numeric distances to human-readable names
   const distanceDisplayNames = {
@@ -162,11 +164,15 @@
     const unsubscribeMinPace = setupStore(selectedMinPace, 'selectedMinPace', DEFAULT_MIN_PACE);
     const unsubscribeMaxPace = setupStore(selectedMaxPace, 'selectedMaxPace', DEFAULT_MAX_PACE);
     const unsubscribeIncrement = setupStore(selectedIncrement, 'selectedIncrement', DEFAULT_INCREMENT);
+    const unsubscribeShowVMA = setupStore(showVMA, 'showVMA', false);
+    const unscubscribeSelectedVMA = setupStore(selectedVMA, 'selectedVMA', DEFAULT_VMA);
 
     return () => {
       unsubscribeMinPace();
       unsubscribeMaxPace();
       unsubscribeIncrement();
+      unsubscribeShowVMA();
+      unscubscribeSelectedVMA();
     };
   });
 
@@ -234,6 +240,21 @@
     <p class="error">{errorMessage}</p>
   {/if}
 
+  <div class="vma-selector">
+    <label class="switch">
+      <input id="vma-switch" type="checkbox" bind:checked={$showVMA}>
+      <span class="slider round"></span>
+    </label>
+    <label class="vma-switch-label" for="vma-switch">VMA</label>
+    {#if $showVMA}
+      <select bind:value={$selectedVMA}>
+        {#each vmaRange as vma}
+          <option value={vma}>{vma.toFixed(1)} km/h</option>
+        {/each}
+      </select>
+    {/if}
+  </div>
+
 </div>
 
 <!-- Table markup to display pace data -->
@@ -241,6 +262,9 @@
   <!-- Table header -->
   <thead>
     <tr>
+      {#if $showVMA}
+        <th>% VMA</th>
+      {/if}
       <th>t/km</th>
       <th>km/h</th>
       {#each columns as column}
@@ -252,6 +276,9 @@
   <tbody>
     {#each paceData as row, rowIndex}
       <tr on:click={(event) => handleHighlight(event, null, row)}>
+        {#if $showVMA}
+          <td class:highlighted={highlighted.row === row}>{Math.round(100 * row.speed / $selectedVMA)}%</td>
+        {/if}
         <td class:highlighted={highlighted.row === row} class="col-head">{formatPace(row.pace)}</td>
         <td class:highlighted={highlighted.row === row} class="col-head">{formatSpeed(row.speed)}</td>
         {#each columns as column, columnIndex}
@@ -275,6 +302,11 @@
 <style>
   form {
     margin-bottom: 10px;
+  }
+
+  label.vma-switch-label {
+    width: 30px !important;
+    margin-left: 2.1rem;
   }
 
   label {
