@@ -13,7 +13,7 @@ export function initStoreFromLocalStorage(store, key, defaultValue) {
     if (typeof defaultValue === 'boolean') {
       parsedValue = storedValue === 'true';
     } else if (typeof defaultValue === 'number') {
-      parsedValue = parseInt(storedValue);
+      parsedValue = parseFloat(storedValue);
     }
   } else {
     parsedValue = defaultValue;
