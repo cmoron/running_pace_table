@@ -206,7 +206,7 @@
   <AthleteSearch />
 
   <!-- World records component -->
-  <WorldRecords />
+  <!--<WorldRecords />-->
 
   <!-- Form to select pace range and increment -->
   <form>
