@@ -1,14 +1,30 @@
 <script>
-  import {onMount} from 'svelte';
-  import {formatPace, formatSpeed, formatTime} from '../utils/timeUtils.js';
-  import {setupStore} from '../utils/storeUtils.js';
-  import {DEFAULT_INCREMENT, DEFAULT_MIN_PACE, DEFAULT_MAX_PACE, DEFAULT_VMA} from '../utils/constants.js';
-  import {selectedMinPace, selectedMaxPace, selectedIncrement} from './paceTableStore.js';
-  import {showWorldRecords, worldRecords, isLoadingRecords} from '../worldRecords/worldRecordsStore.js';
-  import {selectedAthletes} from '../athletes/athletesStore.js';
-  import WorldRecords from '../worldRecords/WorldRecords.svelte';
+  import { onMount } from 'svelte';
+  import { get } from 'svelte/store';
+
+  import { formatPace, formatSpeed, formatTime } from '../utils/timeUtils.js';
+  import { setupStore } from '../utils/storeUtils.js';
+  import {
+    DEFAULT_INCREMENT,
+    DEFAULT_MIN_PACE,
+    DEFAULT_MAX_PACE,
+    DEFAULT_VMA,
+  } from '../utils/constants.js';
+
+  import {
+    selectedMinPace,
+    selectedMaxPace,
+    selectedIncrement,
+    distances,
+    addDistance,
+    removeDistance,
+    DEFAULT_DISTANCES,
+  } from './paceTableStore.js';
+
+  import { showWorldRecords, worldRecords, isLoadingRecords } from '../worldRecords/worldRecordsStore.js';
+  import { selectedAthletes } from '../athletes/athletesStore.js';
   import AthleteSearch from '../athletes/AthleteSearch.svelte';
-  import {showVMA, selectedVMA} from './vmaStore.js';
+  import { showVMA, selectedVMA } from './vmaStore.js';
 
   // State variables for storing pace data and table columns
   let paceData = [];
@@ -19,7 +35,7 @@
   let prevSelectedMaxPace = DEFAULT_MAX_PACE;
   const vmaRange = Array.from({length: 41}, (_, i) => 10 + i * 0.5);
 
-  // Mapping of numeric distances to human-readable names
+    // Mapping of numeric distances to human-readable names
   const distanceDisplayNames = {
     '1609.34': 'Mile',
     '5000': '5km',
@@ -71,14 +87,18 @@
           min_pace: $selectedMinPace,
           max_pace: $selectedMaxPace,
           increment: $selectedIncrement,
+          distances: $distances,
         }),
       });
 
       if (response.ok) {
         paceData = await response.json();
         if (paceData.length > 0) {
-          columns = Object.keys(paceData[0]).filter((key) => key !== 'pace' && key != 'speed');
-          columns.sort((a, b) => parseInt(a) - parseInt(b));
+          columns = Object.keys(paceData[0])
+              .filter((key) => key !== 'pace' && key != 'speed')
+              .sort((a, b) => parseInt(a) - parseInt(b))
+              .map(Number)
+              .sort((a, b) => a - b);
         }
       } else {
         console.error('Error fetching data from the API');
@@ -129,11 +149,11 @@
   }
 
   /**
-    * Returns the color of the athlete record for a given cell in the table.
-    * @param {string} distance - The distance for which to check the record.
-    * @param {number} time - The time achieved for the distance.
-    * @return {string} - The color of the athlete record, or an empty string if none.
-    */
+  * Returns the color of the athlete record for a given cell in the table.
+  * @param {string} distance - The distance for which to check the record.
+  * @param {number} time - The time achieved for the distance.
+  * @return {string} - The color of the athlete record, or an empty string if none.
+  */
   function getAthleteRecordColor(distance, time) {
     const timeDiff = Number(distance) * Number($selectedIncrement) / 1000;
     const prevTime = time + timeDiff;
@@ -157,6 +177,13 @@
     } else {
       return '';
     }
+  }
+
+  let newDistance = '';
+
+  function handleAddDistance() {
+    addDistance(newDistance);
+    newDistance = '';
   }
 
   // Fetch initial data when component mounts
@@ -198,6 +225,7 @@
     }
   }
 
+  $: $distances, fetchPaceData();
 </script>
 
 <div class="top-container">
@@ -236,9 +264,26 @@
     </div>
   </form>
 
-  {#if errorMessage}
-    <p class="error">{errorMessage}</p>
-  {/if}
+  <!-- Ajout distance personnalisée -->
+  <div class="custom-dist">
+    <!--<label for="custom-dist">+ Dist (m)</label>-->
+    <div class="custom-dist">
+      <input
+        type="number"
+        placeholder="Ajouter distance (m)"
+        bind:value={newDistance}
+        min="1"
+        on:keydown={(e) => e.key === 'Enter' && handleAddDistance()}
+      />
+
+      <button
+        type="button"
+        class="add-btn"
+        aria-label="Ajouter une distance"
+        on:click={handleAddDistance}
+      >+</button>
+    </div>
+  </div>
 
   <div class="vma-selector">
     <label class="switch">
@@ -255,6 +300,10 @@
     {/if}
   </div>
 
+  {#if errorMessage}
+    <p class="error">{errorMessage}</p>
+  {/if}
+
 </div>
 
 <!-- Table markup to display pace data -->
@@ -268,7 +317,21 @@
       <th>t/km</th>
       <th>km/h</th>
       {#each columns as column}
-        <th on:click={() => handleHighlight(event, column, null)}>{distanceDisplayNames[column] || column}</th>
+          <th on:click={() => handleHighlight(event, column, null)}>
+              {distanceDisplayNames[column] || column}
+              {#if !DEFAULT_DISTANCES.includes(column)}
+                <span class="delete-btn" role="button" tabindex="0"
+                  aria-label="Supprimer"
+                  on:click={(e)=> {
+                    e.stopPropagation();
+                    console.log('removeDistance', column);
+                    console.log(DEFAULT_DISTANCES, column, DEFAULT_DISTANCES.includes(column) );
+                    removeDistance(column);
+                  }}
+                  on:keydown={(e)=>e.key==='Enter' && removeDistance(column)}
+                >X</span>
+              {/if}
+          </th>
       {/each}
     </tr>
   </thead>
@@ -295,9 +358,7 @@
   </tbody>
 </table>
 
-<div class="contact">
-  <a href="mailto:contact@mypacer.fr">contact@mypacer.fr</a>
-</div>
+<div class="contact"><a href="mailto:contact@mypacer.fr">contact@mypacer.fr</a></div>
 
 <style>
   form {
@@ -380,5 +441,48 @@
 
   .contact {
     margin-top: 1rem;
+  }
+
+  .custom-dist {
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+    margin: .5rem 0 .5rem;
+  }
+
+  .custom-dist input {
+    padding: 0.5rem;
+  }
+
+  .add-btn {
+    width: 24px;
+    height: 24px;
+    border: none;
+    border-radius: 4px;
+    background: #03A9F4;
+    color: #fff;
+    font-size: 1.4rem;
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+    transition: background .2s;
+  }
+
+  .add-btn:hover,
+  .add-btn:focus-visible {
+    background: #0288D1;          /* bleu 600 – plus sombre */
+    outline: none;
+  }
+
+  .delete-btn {
+      cursor:pointer;
+      font-weight:bold;
+      color:#ffebee
+  }
+
+  .delete-btn:hover {
+      color:#b71c1c
   }
 </style>
